@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+"""TUF IPFS Client Example"""
+
+import argparse
+import sys
+import os
+import requests
+from hashlib import sha256
+from urllib import request
+
+from tuf.api.exceptions import DownloadError, RepositoryError
+from tuf.ngclient import Updater
+
+# constants
+DOWNLOAD_DIR = "./downloads"
+
+def ensure_trailing_slash(url: str) -> str:
+    """Return url guaranteed to end in a slash."""
+    return url if url.endswith("/") else f"{url}/"
+
+def build_metadata_dir(base_url: str) -> str:
+    """build a unique and reproducible directory name for the repository url"""
+    name = sha256(base_url.encode()).hexdigest()[:8]
+    return f"./metadata/{name}"
+
+def init_tofu(base_url: str) -> bool:
+    """Initialize local trusted metadata (Trust-On-First-Use) and create a
+    directory for downloads"""
+    metadata_dir = build_metadata_dir(base_url)
+
+    if not os.path.isdir(metadata_dir):
+        os.makedirs(metadata_dir)
+
+    root_url = f"{base_url}/metadata/1.root.json"
+    try:
+        request.urlretrieve(root_url, f"{metadata_dir}/root.json")
+    except OSError:
+        print(f"Failed to download initial root from {root_url}")
+        return False
+
+    print(f"Trust-on-First-Use: Initialized new root in {metadata_dir}")
+    return True
+
+def download(base_url: str, gateway: str, target: str) -> bool:
+    """
+    Download the target file
+    """
+    metadata_dir = build_metadata_dir(base_url)
+
+    if not os.path.isfile(f"{metadata_dir}/root.json"):
+        print(
+            "Trusted local root not found. Use 'tofu' command to "
+            "Trust-On-First-Use or copy trusted root metadata to "
+            f"{metadata_dir}/root.json"
+        )
+        return False
+
+    print(f"Using trusted root in {metadata_dir}")
+
+    if not os.path.isdir(DOWNLOAD_DIR):
+        os.mkdir(DOWNLOAD_DIR)
+
+    try:
+        updater = Updater(
+            metadata_dir=metadata_dir,
+            metadata_base_url=f"{base_url}/metadata/",
+            target_base_url=f"{base_url}/targets/",
+            target_dir=DOWNLOAD_DIR,
+        )
+        updater.refresh()
+
+        info = updater.get_targetinfo(target)
+        hashes = info.hashes
+
+        # Check if CID exists
+        if hashes.get("ipfs") is None:
+            raise ValueError("CID missing from hashes")
+
+        # Download the target file using gateway
+        cid = hashes.get("ipfs")
+        file_url = ensure_trailing_slash(gateway) + "ipfs/" + cid
+        response = requests.get(file_url, timeout=5)
+        if response.status_code != 200:
+            raise DownloadError(f"Unable to download target using url {file_url}")
+        
+        # Save the target file locally
+        filepath = os.path.join(DOWNLOAD_DIR, cid)
+        with open(filepath, 'wb') as file:
+                file.write(response.content)
+
+    except (OSError, RepositoryError, DownloadError) as ex:
+        print(f"Failed to download target {target}: {ex}")
+        return False
+
+    return True
+
+def main() -> None:
+    """Main TUF IPFS Client Example function"""
+
+    client_args = argparse.ArgumentParser(description="TUF IPFS Client Example")
+
+    # Global arguments
+    client_args.add_argument(
+        "-u",
+        "--url",
+        help="Base repository URL",
+        default="http://127.0.0.1:8001",
+    )
+
+    client_args.add_argument(
+        "-g",
+        "--gateway",
+        help="IPFS Gateway",
+        default="https://ipfs.io",
+    )
+
+    # Sub commands
+    sub_command = client_args.add_subparsers(dest="sub_command")
+
+    # Trust-On-First-Use
+    sub_command.add_parser(
+        "tofu",
+        help="Initialize client with Trust-On-First-Use",
+    )
+
+    # Download
+    download_parser = sub_command.add_parser(
+        "download",
+        help="Download a target file",
+    )
+
+    download_parser.add_argument(
+        "target",
+        metavar="TARGET",
+        help="Target file",
+    )
+
+    command_args = client_args.parse_args()
+
+    # initialize the TUF Client Example infrastructure
+    if command_args.sub_command == "tofu":
+        if not init_tofu(command_args.url):
+            return "Failed to initialize local repository"
+    elif command_args.sub_command == "download":
+        if not download(command_args.url, command_args.gateway, command_args.target):
+            return f"Failed to download {command_args.target}"
+    else:
+        client_args.print_help()
+
+if __name__ == "__main__":
+    sys.exit(main())
