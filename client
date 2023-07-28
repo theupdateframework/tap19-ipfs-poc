@@ -4,12 +4,11 @@
 import argparse
 import sys
 import os
-import requests
 from hashlib import sha256
 from urllib import request
 
 from tuf.api.exceptions import DownloadError, RepositoryError
-from tuf.ngclient import Updater
+from tufipfs.updater import IpfsUpdater
 
 # constants
 DOWNLOAD_DIR = "./downloads"
@@ -61,32 +60,28 @@ def download(base_url: str, gateway: str, target: str) -> bool:
         os.mkdir(DOWNLOAD_DIR)
 
     try:
-        updater = Updater(
+        updater = IpfsUpdater(
             metadata_dir=metadata_dir,
             metadata_base_url=f"{base_url}/metadata/",
+            gateway=gateway,
             target_base_url=f"{base_url}/targets/",
             target_dir=DOWNLOAD_DIR,
         )
         updater.refresh()
 
         info = updater.get_targetinfo(target)
-        hashes = info.hashes
 
-        # Check if CID exists
-        if hashes.get("ipfs") is None:
-            raise ValueError("CID missing from hashes")
-
-        # Download the target file using gateway
-        cid = hashes.get("ipfs")
-        file_url = ensure_trailing_slash(gateway) + "ipfs/" + cid
-        response = requests.get(file_url, timeout=5)
-        if response.status_code != 200:
-            raise DownloadError(f"Unable to download target using url {file_url}")
+        if info is None:
+            print(f"Target {target} not found")
+            return True
         
-        # Save the target file locally
-        filepath = os.path.join(DOWNLOAD_DIR, cid)
-        with open(filepath, 'wb') as file:
-                file.write(response.content)
+        path = updater.find_cached_target(info)
+        if path:
+            print(f"Target is available in {path}")
+            return True
+        
+        path = updater.download_target(info)
+        print(f"Target downloaded and available in {path}")
 
     except (OSError, RepositoryError, DownloadError) as ex:
         print(f"Failed to download target {target}: {ex}")
