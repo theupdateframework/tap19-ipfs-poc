@@ -1,1 +1,9 @@
-env
+# root level directories
+env/
+
+# docs build directory
+docs/build/
+
+# global file patterns
+*.pyc
+.vscode

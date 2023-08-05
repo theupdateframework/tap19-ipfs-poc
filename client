@@ -106,7 +106,7 @@ def main() -> None:
         "-g",
         "--gateway",
         help="IPFS Gateway",
-        default="https://ipfs.io",
+        default="http://127.0.0.1:8081",
     )
 
     # Sub commands
