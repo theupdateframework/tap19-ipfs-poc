@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
 """TUF IPFS Client Example"""
-
-import argparse
 import sys
+import argparse
 import os
 from hashlib import sha256
 from urllib import request
 
 from tuf.api.exceptions import DownloadError, RepositoryError
+sys.path.append(".")
 from tufipfs.updater import IpfsUpdater
 
 # constants
 DOWNLOAD_DIR = "./downloads"
 
+
 def ensure_trailing_slash(url: str) -> str:
     """Return url guaranteed to end in a slash."""
     return url if url.endswith("/") else f"{url}/"
+
 
 def build_metadata_dir(base_url: str) -> str:
     """build a unique and reproducible directory name for the repository url"""
     name = sha256(base_url.encode()).hexdigest()[:8]
     return f"./metadata/{name}"
+
 
 def init_tofu(base_url: str) -> bool:
     """Initialize local trusted metadata (Trust-On-First-Use) and create a
@@ -40,9 +43,10 @@ def init_tofu(base_url: str) -> bool:
     print(f"Trust-on-First-Use: Initialized new root in {metadata_dir}")
     return True
 
+
 def download(base_url: str, gateway: str, target: str) -> bool:
     """
-    Download the target file
+    Download the target file using ``IpfsUpdater``.
     """
     metadata_dir = build_metadata_dir(base_url)
 
@@ -74,12 +78,12 @@ def download(base_url: str, gateway: str, target: str) -> bool:
         if info is None:
             print(f"Target {target} not found")
             return True
-        
+
         path = updater.find_cached_target(info)
         if path:
             print(f"Target is available in {path}")
             return True
-        
+
         path = updater.download_target(info)
         print(f"Target downloaded and available in {path}")
 
@@ -88,6 +92,7 @@ def download(base_url: str, gateway: str, target: str) -> bool:
         return False
 
     return True
+
 
 def main() -> None:
     """Main TUF IPFS Client Example function"""
@@ -141,6 +146,7 @@ def main() -> None:
             return f"Failed to download {command_args.target}"
     else:
         client_args.print_help()
+
 
 if __name__ == "__main__":
     sys.exit(main())
