@@ -121,6 +121,8 @@ class IpfsUpdater(Updater):
             raise DownloadError(f"Unable to download target using url {file_url}")
 
         target_file = response.content
+        
+        # If other hashes exist, verify them
         targetinfo.verify_length_and_hashes(target_file)
 
         # Save the target file locally
