@@ -7,7 +7,6 @@ from hashlib import sha256
 from urllib import request
 
 from tuf.api.exceptions import DownloadError, RepositoryError
-sys.path.append(".")
 from tufipfs.updater import IpfsUpdater
 
 # constants

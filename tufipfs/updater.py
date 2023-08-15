@@ -50,6 +50,7 @@ class IpfsUpdater(Updater):
             configuration options.
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         metadata_dir: str,
@@ -121,7 +122,6 @@ class IpfsUpdater(Updater):
             raise DownloadError(f"Unable to download target using url {file_url}")
 
         target_file = response.content
-        
         # If other hashes exist, verify them
         targetinfo.verify_length_and_hashes(target_file)
 
