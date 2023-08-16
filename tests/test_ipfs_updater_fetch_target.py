@@ -3,8 +3,6 @@ Test 'fetch target' of IpfsUpdater as well as simulating
 a basic repository from uploading metadatas to adding targets
 """
 
-import sys
-sys.path.append(".")
 import os
 import tempfile
 import unittest
@@ -19,6 +17,7 @@ class TestTarget:
     path: str
     content: bytes
     cid: str
+    length: int | None
 
 class TestFetchTarget(unittest.TestCase):
     """Test IpfsUpdater downloading target files"""
@@ -53,8 +52,15 @@ class TestFetchTarget(unittest.TestCase):
         "text": TestTarget(
             path="file.txt",
             content=b"file 1 content",
-            cid="QmSFEbC6Y17cdti7damkjoqESWftkyfSXjdKDQqnf4ECV7"
+            cid="QmSFEbC6Y17cdti7damkjoqESWftkyfSXjdKDQqnf4ECV7",
+            length=None
         ),
+        "image": TestTarget(
+            path="astronaut.jpeg",
+            content=b"",
+            cid="QmRKs2ZfuwvmZA3QAWmCqrGUjV9pxtBUDP3wuc6iVGnjA2",
+            length=1613371
+        )
     }
 
     @run_sub_tests_with_dataset(targets)
@@ -62,7 +68,7 @@ class TestFetchTarget(unittest.TestCase):
         """Tests the download functionality of IpfsUpdater"""
         # Add targets to repository
         self.sim.targets.version += 1
-        self.sim.add_target(target.cid, target.content, target.path)
+        self.sim.add_target(target.cid, target.content, target.path, target.length)
         self.sim.update_snapshot()
 
         path = os.path.join(self.targets_dir, target.path)
