@@ -42,7 +42,7 @@ class TestFetchTarget(unittest.TestCase):
     @run_sub_tests_with_test_files()
     def test_fetch_target(self, cid: str, file_path: str, file_bytes: bytes) -> None:
         """Tests the download functionality of IpfsUpdater"""
-        private_gateway = "http://127.0.0.1:8081"
+        private_gateway = "http://127.0.0.1:8080"
         # Add targets to repository
         self.sim.targets.version += 1
         self.sim.add_target(cid, file_path, file_bytes)
