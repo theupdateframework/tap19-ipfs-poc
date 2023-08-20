@@ -134,18 +134,15 @@ class RepositorySimulator(FetcherInterface):
         self.snapshot.version += 1
         self.update_timestamp()
 
-    def add_target(self, cid: str, data: bytes, path: str, length: int | None) -> None:
+    def add_target(self, cid: str, file_path: str, file_bytes: bytes) -> None:
         """Create a target from data and add it to the target_files."""
         targets = self.targets
 
-        target = TargetFile.from_data(path, data)
+        target = TargetFile.from_data(file_path, file_bytes)
         # First remove any sha256 hashes
         target.hashes.clear()
         target.hashes["ipfs"] = cid
-        if length is not None:
-            target.length = length
-
-        targets.targets[path] = target
+        targets.targets[file_path] = target
 
     def _fetch(self, url: str) -> Iterator[bytes]:
         """Fetches data from the given url and returns an Iterator (or yields

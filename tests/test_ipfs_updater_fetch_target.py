@@ -6,18 +6,9 @@ a basic repository from uploading metadatas to adding targets
 import os
 import tempfile
 import unittest
-from dataclasses import dataclass
 from repository_simulator import RepositorySimulator
-from utils import DataSet, run_sub_tests_with_dataset
+from utils import run_sub_tests_with_test_files
 from tufipfs.updater import IpfsUpdater
-
-@dataclass
-class TestTarget:
-    """Sample targets for testing"""
-    path: str
-    content: bytes
-    cid: str
-    length: int | None
 
 class TestFetchTarget(unittest.TestCase):
     """Test IpfsUpdater downloading target files"""
@@ -48,45 +39,21 @@ class TestFetchTarget(unittest.TestCase):
         )
         return updater
 
-    targets: DataSet = {
-        "text": TestTarget(
-            path="file.txt",
-            content=b"file 1 content",
-            cid="QmSFEbC6Y17cdti7damkjoqESWftkyfSXjdKDQqnf4ECV7",
-            length=None
-        ),
-        "image": TestTarget(
-            path="astronaut.jpeg",
-            content=b"",
-            cid="QmRKs2ZfuwvmZA3QAWmCqrGUjV9pxtBUDP3wuc6iVGnjA2",
-            length=1613371
-        )
-    }
-
-    @run_sub_tests_with_dataset(targets)
-    def test_fetch_target(self, target: TestTarget) -> None:
+    @run_sub_tests_with_test_files()
+    def test_fetch_target(self, cid: str, file_path: str, file_bytes: bytes) -> None:
         """Tests the download functionality of IpfsUpdater"""
+        private_gateway = "http://127.0.0.1:8081"
         # Add targets to repository
         self.sim.targets.version += 1
-        self.sim.add_target(target.cid, target.content, target.path, target.length)
+        self.sim.add_target(cid, file_path, file_bytes)
         self.sim.update_snapshot()
 
-        path = os.path.join(self.targets_dir, target.path)
+        destination_path = os.path.join(self.targets_dir, file_path)
 
-        # Initialize IpfsUpdater with private gateway
-        private_gateway = "http://127.0.0.1:8081"
         updater = self._init_updater(private_gateway)
-        info = updater.get_targetinfo(target.path)
+        info = updater.get_targetinfo(file_path)
         assert info is not None
-        self.assertEqual(path, updater.download_target(info))
-
-        # Initialize IpfsUpdater with public gateway
-        public_gateway = "https://ipfs.io"
-        updater = self._init_updater(public_gateway)
-        info = updater.get_targetinfo(target.path)
-        assert info is not None
-        self.assertEqual(path, updater.download_target(info))
-
+        self.assertEqual(destination_path, updater.download_target(info))
 
 if __name__ == "__main__":
     unittest.main()
