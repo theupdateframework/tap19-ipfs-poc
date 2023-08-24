@@ -6,7 +6,7 @@ Table of Contents
 ----------
 - [Motivation](#motivation)
 - [Usage](#usage)
-- [Issue with public gateway](#issue-with-public-gateway)
+- [Issue with public gateways](#issue-with-public-gateways)
 
 Motivation
 ----------
@@ -16,7 +16,7 @@ One solution to this problem could be to delegate the responsibility of artifact
 
 Usage
 -----
-The repository provides an API called [``IpfsUpdater``](https://github.com/shubham4443/tuf-ipfs/blob/main/tufipfs/updater.py) which is built on top of original ``python-tuf``'s [``Updater``](https://github.com/shubham4443/python-tuf/blob/develop/tuf/ngclient/updater.py). A client with IPFS targets can initialize the ``IpfsUpdater`` to download the targets. An additional IPFS ``gateway`` property has to be specified while initializing the ``IpfsUpdater``. The ``IpfsUpdater`` uses this ``gateway`` to fetch the target over HTTP/s. The ```gateway``` can be any publicly available IPFS gateways (for e.g. ipfs.io or web3.storage) or a private gateway hosted by the client itself which is more secured (recommended).
+The repository provides an API called [``IpfsUpdater``](https://github.com/shubham4443/tuf-ipfs/blob/main/tufipfs/updater.py) which is built on top of original ``python-tuf``'s [``Updater``](https://github.com/shubham4443/python-tuf/blob/develop/tuf/ngclient/updater.py). A client with IPFS targets can initialize the ``IpfsUpdater`` to download the targets. An additional IPFS ``gateway`` property has to be specified while initializing the ``IpfsUpdater``. The ``IpfsUpdater`` uses this ``gateway`` to fetch the target over HTTP/s. The ```gateway``` **must be** a local gateway (see [Issue with public gateways](#issue-with-public-gateway)).
 
 ```
 updater = IpfsUpdater(
@@ -30,6 +30,6 @@ updater = IpfsUpdater(
 
 An example usage can be found in [examples/client.py](https://github.com/shubham4443/tuf-ipfs/blob/main/examples/client).
 
-Issue with Public Gateway
+Issue with Public Gateways
 --------
 Public gateways are considered **unsafe** because their credibility cannot be validated as of now. However, this is still work in progress and we feel [Content Addressable Archives (CAR)](https://ipld.io/specs/transport/car/carv2/) could provide a solution to this issue. Until a solid fix is not available, we highly recommend to use private gateway (local IPFS node) that is trusted for integrity checks and safe from any attacks. [IPFS Desktop App](https://docs.ipfs.tech/install/ipfs-desktop/) and [Kubo](https://github.com/ipfs/kubo) offer most secure IPFS protocol implementation and widely used for running a IPFS daemon.
