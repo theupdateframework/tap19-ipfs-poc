@@ -2,6 +2,12 @@
 
 This repository serves the purpose of **Proof-of-Concept** implementation for [**TAP 19**](https://github.com/theupdateframework/taps/blob/master/tap19.md). The TAP explores how TUF can be adapted to content addressed ecosystems that have in-built integrity checks for their artifacts. [**IPFS**](https://ipfs.tech/) is one of the content addressable system that has artifact integrity capabilities which can be complemented by all of TUF's other features.
 
+Table of Contents
+----------
+- [Motivation](#motivation)
+- [Usage](#usage)
+- [Issue with public gateway](#issue-with-public-gateway)
+
 Motivation
 ----------
 The TUF specification provides explicit guidelines for how artifacts should be hashed and later verified to guarantee their integrity. The TUF specification leaves no room for ambiguity regarding the hashing requirements for artifacts integrity. However, Content Addressable Systems like Git, IPFS (InterPlanetary File System) and OSTree have their own mechanisms for ensuring the integrity of artifacts. When TUF is used with these systems, it is redundant for it to also ensure artifact integrity.
@@ -23,3 +29,7 @@ updater = IpfsUpdater(
 ```
 
 An example usage can be found in [examples/client.py](https://github.com/shubham4443/tuf-ipfs/blob/main/examples/client).
+
+Issue with Public Gateway
+--------
+Public gateways are considered **unsafe** because their credibility cannot be validated as of now. However, this is still work in progress and we feel [Content Addressable Archives (CAR)](https://ipld.io/specs/transport/car/carv2/) could provide a solution to this issue. Until a solid fix is not available, we highly recommend to use private gateway (local IPFS node) that is trusted for integrity checks and safe from any attacks. [IPFS Desktop App](https://docs.ipfs.tech/install/ipfs-desktop/) and [Kubo](https://github.com/ipfs/kubo) offer most secure IPFS protocol implementation and widely used for running a IPFS daemon.
