@@ -1,4 +1,5 @@
 # <img src="https://i.imgur.com/eSeNsYf.png">
+> **⚠️ This is still a prototype. Not recommended to use in production.**
 
 This repository serves the purpose of **Proof-of-Concept** implementation for [**TAP 19**](https://github.com/theupdateframework/taps/blob/master/tap19.md). The TAP explores how TUF can be adapted to content addressed ecosystems that have in-built integrity checks for their artifacts. [**IPFS**](https://ipfs.tech/) is one of the content addressable system that has artifact integrity capabilities which can be complemented by all of TUF's other features.
 
